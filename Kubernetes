@@ -1,0 +1,419 @@
+Kubernetes - Orquestrar containers
+NOTA: Always have one master node, and the worker nodes.
+
+Master Node (Control Plane)
+1. Scheduler - sched.
+2. API Server - api
+3. Cluster Store - etcd
+4. Controller Manager - c-m
+5. Cloud Controller Manager - c-c-m
+__
+
+API SERVER
+1. Frontend to kubernetes Control Plane
+2. All comunications go through API server External and Internal
+3. Exposes Resful API on port 443
+4. Authentication and Authorisation checks
+
+Cluster store | state - database
+1. Stores configuration and state of the entire cluster
+2. Distributed Key Value data store
+3. Single source of Truth
+
+SCHEDULER
+1. watches for new workloads/pods and assigns them to a node based on several scheduling factors
+2. Healthy?
+3. Enough resources?
+4. Port available?
+5.Affinity and Anti Affinity rules
+6. etc
+
+Controller Manager
+1. Daemon that manages the control loop.
+Controller of controllers
+ 1.1.  Node Controller - responsavel por substituicao de nodes, em caso de problemas;
+ Others Controllers
+ 1. ReplicaSet
+ 2. Endpoint
+ 3. Namespace
+ 4 Service Accounts
+ 5. Others
+ 
+Cloud Controller Manager
+1. Responsible to interact with underlying cloud provider (aws, azure , etc)
+2. Load Balancers
+3. Storage
+4. Instances
+
+Master in a nutshell
+1. Master runs all cluster's control plane services;
+2. The brains where control and decisions are made
+
+WORKER NODE - VM - constituido
+1. kubelet
+2. conatiner runtime
+3. Kube Proxy
+
+Running Kubernetes
+1. Run in yourself. Which is really hard
+2. Managed Kubernetes - -preferencial
+2.1. EKS - Elastic Kubernetes Service - aws
+2.2. GKE - Google Kubernetes Engine
+2.3. AKS - Azure kubernetes - azure
+and other cloud provideres
+
+Running Kube Cluster Locally - do not use in prodution env - important
+. Local Cluster
+1. minikube
+2. kind
+3. docker
+
+MINIKUBE - Installation
+https://minikube.sigs.k8s.io/docs/start/
+
+after installation, 
+$ minikube start
+$ minikube status
+$ docker ps
+$ minikube ip
+
+KUBECTL
+- kubernetes Command Line Tool
+- Run commands gains your cluster
+--deploy
+--inspect
+--edit resources
+--edit resources
+--debug
+--view logs
+--etc
+
+Installing KubeCtl
+https://kubernetes.io/docs/tasks/tools/#kubectl
+
+KUBERNETES HELLO WORLD
+
+// somente correr o container no docker
+$ docker run --rm -p 80:80 amigoscode/kubernetes:hello-world
+
+// correr o container usando o kubernetes (ele cria o pod)
+$ kubectl run hello-world --image=amigoscode/kubernetes:hello-world --port=80 
+// expondo para acesso externo
+$ kubectl port-forward pod/hello-world 8080:80
+
+//debug kubernetes
+sudo swapoff -a
+minikube start kubelet || sudo systemctl start kubelet
+
+// get all the pods
+$ kubectl get pods
+
+// delete pod
+$ kubectl delete pod hell-world
+
+// get all pods in all namespace
+$ kubectl get pods -A
+
+// get nodes
+$kubectl get nodes
+
+//ssh to nodes
+$ minikube ssh
+
+// stop and preserv info inside cluster
+$ minikube stop
+// to destroy all cluster
+$ minikube delete
+
+// CREATE A CLUSTER WITH 2 NODES
+$ minikube start --nodes=2
+
+//list nodes
+kubectl get nodes
+minikube status
+
+// show IP ADD
+minikube ip --node minikube-m02
+
+// debug nodes
+minikube logs
+// to tail the logs
+minikube logs -f
+// specifying node
+minikube logs -n minikube-m02 -f
+
+PODS
+smallest deployable unit in kubernetes;
+
+CREATE PODs
+1. Imperative -- highly used for learning propused; or for troubleshouting; experimental
+ex.: kubectl run hello-world --image=amigoscode/kubernetes:hello-world --port=80 
+kubectl port-forward pod/hello-world 8080:80
+
+2. Declarative --usando o yaml file, is portable for producao, best practice
+
+navegate to the directory that u've store the pod.yml file
+$ kubectl apply -f pod.yml
+$ kubectl port-forward pod/hello-world 8080:80
+__
+# listar pods with watch option
+$ kubctl get pods -w
+
+KUBCTL
+create pod
+$ cat pod.yml | kubectl apply -f -
+
+delete pod
+$ kubectl delete pod hello-world
+
+show all pods in diferents namespace -A
+$ kubectl get pods -A
+
+$ kubectl get all -A
+
+specify namespace -n
+$ kubectl get all -n kube-system
+
+list namespaces or ns
+$ kubectl get namespaces
+
+get details of certain pod
+$ kubectl describe pod hello-world
+
+get details in short way -o = --output yaml
+$kubectl get pod hello-world -o wide
+
+
+Logs
+$ kubectl logs hello-world
+
+logs detach
+$ kubectl logs hello-world -f 
+
+logs for specific container -c
+$ kubectl logs hello-world -c hello-world
+
+EXEC TO CONATINER --/bin/sh
+$ kubectl exec -it hello-world -c hello-world --bash
+
+PORT FORWARD
+$ kubectl port-forward hello-world 8080:80
+$ kubectl port-forward pod/hello-world 8081:80
+
+LIST RESOURCES
+$ kubectl api-resources
+
+https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+
+DEPLOYMENTS
+melhor forma de hospedar pods, garante sempre replicas dos pods
+
+kubectl apply -f deployment.yaml
+
+
+===== Macarote aulas
+// Obter informacao do cluster no minikube
+kubectl cluster-info
+
+kubectl get all
+kubectl get pods
+kubectl get nodes
+kubectl describe pods
+
+// eliminar pod
+kubectl delete pod pod-nginx
+// declarative approach
+kubectl apply -f pod1.yaml
+
+ReplicaSet rs
+- garante escalabilidade;
+- resiliencia;
+
+// escalar a aplicacao
+kubectl scale replicaset redis-replicaset --replicas=10
+
+//aplicar deployment
+kubectl apply -f deploy2.yaml
+
+kubectl get all
+
+Estrategias usadas nos deployment
+1. Recreate: recria uma nova verao, ha down time;
+2. RollingUpdate: Estrategia padrao do kubernetes, permite migracao ordenada de uma versao de um aplicativo para uma versao mais recente.
+3. Blue/Green: sao criados dois ambientes separados, mas identicos. Azul - com a versao actual do aplicativo; Verde com a nova versao do aplicativo;
+4. Canary: Implantacao que libera um aplicativo ou servico de forma incremental para um subconjunto de usuarios.
+
+Descricao do Deployment
+kubectl describe deployment nginx-deploy
+
+escalar deployment
+kubectl scale deployment nginx-deploy --replicas 3
+
+fazendo rollback de deployment (controle de versoes   )
+kubectl get all
+
+kubectl rollout undo deploy nginx-deploy -n default
+
+
+SERVICES
+- conectam um conjunto de pods a um nome de servico abstracto e um endereco IP e fornecem a descoberta e roeamento entre pods;
+- expoem uma interface a esses pods que permite o acesso a rede de dentro do cluster ou entre processos externos e o servico.
+
+Os services usam labels e selectores para combinar os pods com outros aplicativos,e, os principais atributos de um service no kubernetes sao:
+1. Um selector de Labels que localiza os pods;
+2. O endereco IP do ClusterIP e o numero de po rta atribuido;
+3. Definicoes de porta;
+4. Mapeamento opcional de portas de entrada para um tragetPort;
+
+Tipos de Servicos
+1. ClusterIP;
+2. NodePort;
+3. LoadBalancer;
+4. ExternalName;
+
+Como descobrir e acessor?
+1. Por meio do DNS do Cluster (recomendado);
+2. Por meio de variaveis de abiente nos Nodes ou Nos;
+
+
+Os servicos sao definidos de forma declarativa num service.yaml file e aplicado pelo kubectl apply -f service.yaml;
+Mas tambem podem ser gerados de forma imperativa.
+
+kubectl expose deployment meu-deploy --name=apache-service --type=ClusterIP --port=8080 --target-port=8080
+
+//Antes de aplicar o service precisamos ter um deployment em execucao.
+
+kubectl get deploy
+kubectl get pod -o wide
+
+//get all services
+kubectl get svc
+
+//descrever
+kubectl describe svc apache-service
+
+//expondo o service
+kubectl port-forward service/apache-service 7000:8080
+
+Exercicio
+1. Criando uma image docker
+docker build project/dockerfile -t nome_image .
+
+2. Correr a image
+docker container run -d -p 8080:80 --name testemvc nome_image
+
+3. login no docker hub por linha de comando
+docker login
+
+4. criar tag na image
+docker tag nome_image_tag carlos/nome_image_gerada
+
+5. Carregar a imagem no docker hub
+docker push carlos/nome_image_gerada
+
+6. gerar o deployment
+frontend-deploy.yaml
+
+7. aplicar do kubernetes
+kubectl apply -f frontend-deploy.yaml
+kubectl get all 
+kubectl describe deploy frontend-deploy
+
+8. Gerar service
+frontend-service.yaml
+
+kubectl apply -f frontend-service.yaml
+kubectl get svc
+kubectl describe svc pizzafrontend
+
+expondo a aplicacao para conexao externa
+minikube service pizzafrontend
+ou 
+kubectl port-forward service/pizzafrontend 7080:8080
+
+//Gerenciamento de Deployments
+depois de editar o numero de replicas no ficheiro frontend-deploy.yaml
+kubectl apply -f frontend-deploy.yaml
+
+
+Apagar objectos do kubernetes
+kubectl delete <tipo_objecto> <nome_objecto>
+kubectl delete pod nome_pode
+kubectl delete svc nome_servico
+
+kubectl delete -f <nome_arquivo>.yaml
+kubectl delete -f frontend-deploy.yml
+
+//Interacao com os pods dentro do kubernetes
+kubectl exec -it nome_container -- sh
+
+KubeConfig
+
+kubectl config <comando>
+kubectl config --help
+
+//minikube Dashboard - gerenciado atraves de interface grafica
+
+minikube dashboard
+ou
+minikube dashboard --url
+
+//INGRESS
+- e' um objecto kubernetes cujo trabalho e' expor e gerenciar o acesso externo aos services kubernetes usando rotas HTTP e HTTPS.
+
+Para o ingess funcionar faz-se necessario um Ingress Controller;
+
+Preferencial(desenvolvido pelo pessoal da kubernetes): ingress-nginx
+
+existem outros Ingress Controllers
+https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
+
+Guia de INstalacao:
+https://kubernetes.github.io/ingress-nginx/deploy/#minikube
+
+Ambiente do Minikube:
+minikube addons enable ingress
+
+O ingress deve expor o subdominio valido ou que exista.
+
+//aplicando o ingress
+kubectl apply -f frontend-ingress.yaml
+kubectl get ingress
+
+no windws
+minikube tunnel (noutra janela do terminal)
+minikube ssh 
+curl ip_apresentado
+
+Volumes no Kubernetes
+- volume efemero
+- volumen persistente
+
+tipos de volumes
+1. emptyDir
+
+Nao perde o conteudo quando morre o container, mas sim quando morre o pod
+
+kubectl exec frontend-volume-56gfst -c container-volume -- /bin/sh -c "kill 1"
+
+kubectl exec -it frontend-volume -- /bin/bash
+__
+2. Volume Persistente
+exemplo: pv1.yml
+1. PV = pv1.yml
+kubectl apply -f pv1.yml
+kubectl get pv
+
+2. PVC = pvc1.yml
+kubectl apply -f pvc1.yml
+kubectl get pvc
+
+3. Pod = pod1.yml
+kubectl apply -f pod1.yml
+kubectl get all
+kubectl describe pod aspnet-pod
+
+
+
+
+
