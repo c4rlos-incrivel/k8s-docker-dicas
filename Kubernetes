@@ -413,7 +413,43 @@ kubectl apply -f pod1.yml
 kubectl get all
 kubectl describe pod aspnet-pod
 
+VOLUMES PERSISTENTES - PRATICA
 
+1. Criar um PVC - Persistent Volume Claim pvc2.yml
+kubectl apply -f pvc2.yml
 
+2. Criar um Deployment para o SQL Server com Persistent Volume (PV)
+kubectl apply -f sqldeploy.yml
 
+3. Criar um servico para expor o Pod do SQL Server
+kubectl apply -f sql-service.yml
 
+4. CRIAR UM DEPLOYMENT PARA A ALICACAO asp.net Core MVC
+kubectl apply -f app-deploy.yml
+
+5. Criar um servico para expor o pod da aplicacao ASP.NET Core MVC para o acesso externo
+kubectl apply -f app-service.yml
+
+6. CRIAR o Bnaco e incluirr dados
+minikube service crudapp-service (nao funciona no ambiente windows)
+
+kubectl portforward service/crudapp-service 7400:80
+
+SECRETS  (RFC 1123) etc
+- e' um objecto que armazena informacao sensivel, como senhas, tokens ou chaves.
+- Para o uso de chaves SSH, Senhas de Banco de dados, Tokens Oauth, Chaves de API, Chaves de registro de imagem
+
+Categorias de Secrets
+1. Integrados
+2. Customizados
+
+criando secrets (user-cred)
+echo -n 'admin' > username.txt
+echo -n 'Numsey1' > password.txt
+kubectl create secret generic user-cred --from-file=./username.txt --from-file=./password.txt
+
+kubectl get secrets
+kubectl describe secrets/user-cred
+kubectl edit secret/user-cred
+kubectl get secret user-cred -o yaml
+kubectl get secret user-cred --o jsonpath='{.data}'
