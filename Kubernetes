@@ -452,4 +452,99 @@ kubectl get secrets
 kubectl describe secrets/user-cred
 kubectl edit secret/user-cred
 kubectl get secret user-cred -o yaml
-kubectl get secret user-cred --o jsonpath='{.data}'
+kubectl get secret user-cred -o jsonpath='{.data}'
+
+//Secrets - Criacao usando a linha de comando e a entrada Literal
+kubectl create secret generic test-cred --from-literal=username=user --from-literal=password=Numsey1
+
+Secrets - Criacao usando arquivos YAML usando o atributo data
+
+echo -n 'admin' > ./usuario.txt | base64
+echo -n 'Numsey1' > ./senha.txt | base64
+
+Windows - Converter para base64 https://www.base64encode.org/
+
+criar secret1.yml
+kubectl apply -f secret1.yml
+
+kubectl apply -f secret2.yml
+kubectl get secret dbpass2 -o yaml
+
+COMO USAR OS SECRETS NOS PODS 
+secret3.yml
+pod3.yml
+
+Kustomization.yaml
+kubectl apply -k .
+kubectl describe secrets/mysecret
+
+HELM
+- Ferramenta de deployment do kubernetes usada para automatizar a criacao, o empacotamento, a configuracao e a implantacao de aplicativos e servicos em clusters do kubernetes.
+
+Instalacao
+1. INstalr o chocolatekey - https://chocolatey.org/install
+2. choco install kubernetes-helm    // mais detalhes em https://helm.sh/docs/intro/install/
+
+Conceitos
+1. Chart - pacote do Helm que contem todas as definicoes de recursos necessarios para executar um aplicativo, ferramenta ou servico em um cluster kubernetes.
+2. Repositorio - local onde os charts podem ser coletados e compartilhados.
+3. Release - instancia de um chart em execucao em um cluster kubernetes.
+
+Principais comandos
+1. helm search hub - pesquisa o artifact Hub, que lista charts helm de dezenas de repositorios diferentes.
+
+helm search hub wordpress
+
+2. helm search repo - pesquisa os repositorios que voce adicionou ao seu cliente helm local (com helm repo add)
+
+helm search repo <nome>
+
+3. help upgrade e/ou helm rollback
+4. helm uninstall <nome>     /desinstalar uma release
+5. helm create demo //criando um chart - cria uma pasta com uma estrutura de dados.
+
+//pratica, depois de criar um chart, que esse monta a estrutura e ficheiros, e definido a imagem, vamos fazer a instalacao do Chart
+Criar uma release (deve estar dentro da pasta criada pelo chart)
+helm install mvcprodutos .
+
+kubectl get pod
+kubectl get svc
+kubectl get deploy
+helm list
+
+//Aceder a aplicacao
+kubectl port-forward service/mvcprodutos 7020:8080
+
+//desinstalar o chart mvcprodutos
+helm uninstall mvcprodutos
+
+// Principais comandos Helm
+helm version - exibe a versao do helm
+helm create - criar um novo chart com o nome definido
+helm lint - examina se o chart esta bem formado
+helm install - instala um chart existente
+helm list - lista as releases de um namespace
+helm history - exibe o historico de revisoes para uma release
+helm upgrade - actualiza uma release para uma nova versao
+helm rollback - retorna uma release para versao anterior
+helm uninstall
+
+Para actualizar o numero de replicas "pods"
+Dentro da pasta do chart
+criar um ficheiro 
+production-values.yaml
+definir o parametro por editar
+replicaCount: 3
+
+helm upgrade -f production-values.yaml pizzaria-chart .
+
+helm history pizzaria-chart
+
+Rollback
+
+helm rollback [release] [revisao] [flag]
+[flag] --dry-run ou --force
+
+helm rollback pizzaria-chart 2
+
+desinstalar o chart: helm uninstall pizzaria-chart 
