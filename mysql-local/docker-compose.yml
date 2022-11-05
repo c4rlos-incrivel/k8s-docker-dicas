@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  mysql_db:
+    image: mysql:latest
+    container_name: local-mysql
+    volumes: 
+      - ./confs/mysql_db:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: Killer2o22
+      MYSQL_DATABASE: sie
+      MYSQL_USER: c4rlos
+      MYSQL_PASSWORD: Killer2o22
+      SERVICE_NAME: mysql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    networks: 
+        - localmente
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql_db
+      UPLOAD_LIMIT: 300M
+    depends_on:
+      - mysql_db
+    ports:
+      - "8081:80"
+    networks: 
+        - localmente
+networks: 
+      localmente:
+        driver: bridge 
